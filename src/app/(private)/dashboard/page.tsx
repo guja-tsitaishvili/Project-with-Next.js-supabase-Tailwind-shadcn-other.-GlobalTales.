@@ -1,22 +1,22 @@
-'use client'
+// app/(private)/dashboard/page.tsx
+import { createSupabaseServerClient } from '@/api/server'
+import SignOutButton from '@/components/ui/SignOutButton' // <-- adjust path if yours differs
 
-import React from 'react'
-import { Button } from '@/components/ui/button'
-import client from '@/api/client' // <-- make sure this path matches your client file
+export const dynamic = 'force-dynamic' // per-request (reads cookies)
 
-const Dashboard: React.FC = () => {
-  const handleSignOut = async () => {
-    await client.auth.signOut()
-    // optionally: redirect after sign-out
-    // window.location.href = '/'
-  }
+export default async function Dashboard() {
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   return (
-    <div>
-      <h1>This is dashboard</h1>
-      <Button onClick={handleSignOut}>Sign out</Button>
-    </div>
+    <main className="p-6 space-y-4">
+      <h1 className="text-2xl font-semibold">This is dashboard</h1>
+      {user?.email && (
+        <p className="text-sm opacity-80">Signed in as {user.email}</p>
+      )}
+      <SignOutButton />
+    </main>
   )
 }
-
-export default Dashboard

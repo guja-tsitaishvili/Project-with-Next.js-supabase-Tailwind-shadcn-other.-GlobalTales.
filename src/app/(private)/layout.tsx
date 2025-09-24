@@ -1,26 +1,18 @@
-'use client'
 
-import { useEffect, type ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
-import useAuth from '@/hooks/useAuth'
+import { type ReactNode } from 'react'
+import { redirect } from 'next/navigation'
+import { createSupabaseServerClient } from '@/api/server'
 
 type PrivatePagesLayoutProps = {
   children: ReactNode
 }
+export const dynamic = 'force-dynamic'
 
-const PrivatePagesLayout: React.FC<PrivatePagesLayoutProps> = ({ children }) => {
-  const { user, loading } = useAuth()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/') // avoid back button returning here
-    }
-  }, [loading, user, router])
-
-  if (loading || !user) return null
+export default async function PrivateLayout({ children }: PrivatePagesLayoutProps) {
+  const supabase = await createSupabaseServerClient() // ← await the factory now
+  const { data: { user } } = await supabase.auth.getUser() //i dont know how this gives user.
+ console.log(user + "  <- if this is null its bad becouse its from (private)/layout.tsx, it bounces us back")
+  if (!user) redirect('/')
 
   return <>{children}</>
 }
-
-export default PrivatePagesLayout

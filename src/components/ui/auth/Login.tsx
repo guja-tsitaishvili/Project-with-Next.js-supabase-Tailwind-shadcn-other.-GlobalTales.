@@ -1,6 +1,7 @@
 'use client'
 import client  from '@/api/client'
-import React from 'react'
+import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Card,
   CardContent,
@@ -14,10 +15,13 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
 const Login: React.FC = () => {
-  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+   const router = useRouter()
+   const [submitting, setSubmitting] = useState(false)
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (submitting) return
     const form = e.currentTarget
-    const email = (form.elements.namedItem('email') as HTMLInputElement)?.value
+    const email = (form.elements.namedItem('email') as HTMLInputElement)?.value?.trim()
     const password = (form.elements.namedItem('password') as HTMLInputElement)?.value
 
     // TODO: call Supabase signUp here
@@ -27,8 +31,10 @@ const Login: React.FC = () => {
     console.log({ email, password })
     if(!email || !password ){
         toast.error('Please enter email and password');
+        return
     }
-
+    setSubmitting(true)  
+     try {
     const {data, error} = await client.auth.signInWithPassword({
         email,
         password,
@@ -36,15 +42,43 @@ const Login: React.FC = () => {
 
     console.log(data);
     console.log(error)
-    if(data){
-    toast.success('Success. Please login now.')
-  }
+    
    if(error){
+      console.error('signInWithPassword error:', error)
     toast.error('Unable to login. Please try again.')
+    return
   }
+    if (!data?.session) {
+        toast.error('Login failed. No session returned.')
+        return
+      }
 
+
+    
+    const res = await fetch('/api/auth/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ event: 'SIGNED_IN', session: data.session }),
+   })
+
+  if (!res.ok) {
+        const body = await res.text().catch(() => '')
+        console.error('Failed to sync session cookies:')
+        toast.error('Login succeeded, but session sync failed.')
+        return
+      }
+  toast.success('Logged in!');
+  router.replace('/dashboard');
+     router.refresh()
+    } catch (err) {
+      console.error('Login unexpected error:', err)
+      toast.error('Something went wrong. Please try again.')
+    }
+    
+    finally {
+      setSubmitting(false)
+    }
   }
-  
 
   return (
     <Card>
@@ -54,7 +88,7 @@ const Login: React.FC = () => {
       </CardHeader>
 
       <CardContent>
-        <form onSubmit={handleSignUp} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -75,12 +109,12 @@ const Login: React.FC = () => {
               type="password"
               required
               placeholder="••••••••"
-              autoComplete="new-password"
+              autoComplete="current-password"
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Create account
+          <Button type="submit" className="w-full" disabled={submitting}>
+             {submitting ? 'Logging in…' : 'Log in'}
           </Button>
         </form>
       </CardContent>
