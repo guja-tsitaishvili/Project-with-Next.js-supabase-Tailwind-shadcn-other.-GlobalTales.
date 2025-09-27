@@ -2,22 +2,25 @@
 //In short: it tells Next.js how your app should behave at build time and runtime.
 //Image domains (images.domains / remotePatterns)
 //
+// next.config.ts
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-    images: {
+  images: {
     remotePatterns: [
       {
         protocol: "https",
+        // ⚠️ use YOUR project ref here:
         hostname: "juioxkzmhtpcsddlskpi.supabase.co",
-        pathname: "/storage/v1/object/public/**",
+        // allow both public and signed URLs
+        pathname: "/storage/v1/object/**",
       },
     ],
   },
 };
 
 export default nextConfig;
+
 
 
 // You must whitelist hostnames in next.config.ts so Next.js knows:

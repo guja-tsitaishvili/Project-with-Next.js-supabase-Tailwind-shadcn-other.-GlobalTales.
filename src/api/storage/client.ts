@@ -16,30 +16,30 @@ type UploadProps = {
 
 export async function uploadImage({file, bucket, folder}: UploadProps) {
     const fileName = file.name
-    const fileExtension = fileName.slice(fileName.lastIndexOf(".") + 1)
+    const fileExtension = fileName.slice(fileName.lastIndexOf(".") + 1) //this retruns file extension name jpg for exmpl.
     const path = `${folder ? folder + "/" : "" }${uuid()}.${fileExtension}`
 
 
 try {
-    file = await imageCompression(file, {
-        maxSizeMB: 1
-    })
+    file = await imageCompression(file, 
+        { maxSizeMB: 1}
+    )
 }  catch(error){
     console.error(error)
     return {imageUrl:"", error:"Image compression failed"}
 }
 
 const storage = getStorage()
-
-const {data, error} = await storage.from(bucket).upload(path, file)
+                                                                    //overwrite enabled (safer)
+const {data, error} = await storage.from(bucket).upload(path, file, { upsert: true, contentType: file.type })
 
 
  if (error) {
   console.error("Supabase upload error:", error.message, error)
-  return { imageUrl: "", error: error.message }
+  return { path: "", error: error.message }
 }
 
-  const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL!}/storage/v1/object/public/${bucket}/${data?.path}` 
+  
 
-  return {imageUrl, error: ""};
+  return { path: data?.path ?? path, error: '' } //use to have public url here but changed it becouse bucket is private now 
 }
