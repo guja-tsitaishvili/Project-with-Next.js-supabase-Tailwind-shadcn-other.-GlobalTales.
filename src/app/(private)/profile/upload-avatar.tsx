@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button'
 export default function UploadAvatar() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [name, setName] = useState<string>("")
   const inputRef = useRef<HTMLInputElement>(null)
-
+  const [editingName, setEditingName] = useState(false)
   // Load current avatar on mount
   useEffect(() => {
     void (async () => {
@@ -19,14 +20,17 @@ export default function UploadAvatar() {
 
       const { data: profile } = await client
         .from('profiles')
-        .select('avatar_url')
+        .select('avatar_url, full_name')
         .eq('id', user.id)
         .single()
 
       if (profile?.avatar_url) {
-        const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profile_avatars/${profile.avatar_url}`
+        const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profile_avatars/${profile.avatar_url}?t=${Date.now()}`
         setAvatarUrl(publicUrl)
       }
+      if (profile?.full_name) {
+      setName(profile.full_name) // <-- new state for name
+}
     })()
   }, [])
 
@@ -40,8 +44,9 @@ export default function UploadAvatar() {
         return
       }
 
-      // fixed key so you always overwrite the same avatar
-      const path = `${user.id}/avatar.${file.name.split('.').pop() || 'jpg'}`
+      // overwrite same avatar each time
+     const ext = file.name.split('.').pop() || 'jpg'
+      const path = `${user.id}/avatar.${ext}`
 
       const { error: upErr } = await client.storage
         .from('profile_avatars')
@@ -61,12 +66,32 @@ export default function UploadAvatar() {
         toast.error(profErr.message)
         return
       }
-
-      const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profile_avatars/${path}`
+      // Cache-busting public URL
+      const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profile_avatars/${path}?t=${Date.now()}`
       setAvatarUrl(publicUrl)
       toast.success('Avatar updated!')
     })
   }
+
+   const handleChangeName = async () => {
+  const { data: { user }, error: authErr } = await client.auth.getUser()
+  if (authErr || !user) {
+    toast.error("Not authenticated")
+    return
+  }
+
+  const { error } = await client
+    .from("profiles")
+    .upsert({ id: user.id, full_name: name }, { onConflict: "id" })
+
+  if (error) {
+    toast.error(error.message)
+    return
+  }
+
+  toast.success("Name updated!")
+  setEditingName(false)
+}
 
   return (
     <div className="space-y-4">
@@ -87,7 +112,7 @@ export default function UploadAvatar() {
           )}
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-row gap-2">
           <input ref={inputRef} type="file" accept="image/*" hidden onChange={onChange} />
           <Button
             onClick={() => inputRef.current?.click()}
@@ -95,6 +120,26 @@ export default function UploadAvatar() {
           >
             {isPending ? 'Uploading…' : 'Upload new avatar'}
           </Button>
+
+          <div className="gap-2">
+            {editingName ? (<>
+            <input value={name} type="text" className="border rounded p-2" onChange={(e) => setName(e.target.value)} placeholder="Enter your name"/>
+            <Button onClick={handleChangeName}>
+             save
+          </Button>
+          <Button variant="secondary" onClick={() => setEditingName(false)}>
+        Cancel
+      </Button>
+      </>
+          ) 
+          : 
+          (
+            <Button onClick={() => setEditingName(true)}>
+             Change Name
+            </Button>
+          )
+        }
+          </div>
         </div>
       </div>
     </div>

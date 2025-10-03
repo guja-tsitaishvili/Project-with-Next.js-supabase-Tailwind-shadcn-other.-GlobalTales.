@@ -26,7 +26,11 @@ export default async function Home(): Promise<JSX.Element> {
 
   return (
     <div className="font-sans grid min-h-screen place-items-center p-8 sm:p-20">
+
       <Auth />
+
+
+
     </div>
   )
 }
