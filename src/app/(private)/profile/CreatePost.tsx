@@ -1,16 +1,17 @@
 // app/(private)/posts/CreatePost.tsx
 'use client'
 //AI +
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { v4 as uuid } from 'uuid'
 import client from '@/api/client' // your Supabase browser client
 // optional: import { toast } from 'sonner'
 
 type Props = {
-  onCreated?: () => void   // optional callback after success
+  onCreated?: () => void,
+  initialLocation?: string   // optional callback after success
 }
 
-export default function CreatePost({ onCreated }: Props) {
+export default function CreatePost({ onCreated, initialLocation }: Props) {
   const [file, setFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -18,6 +19,11 @@ export default function CreatePost({ onCreated }: Props) {
   const [preview, setPreview] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (initialLocation) setLocation(initialLocation)
+  }, [initialLocation])
+
 
   function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null

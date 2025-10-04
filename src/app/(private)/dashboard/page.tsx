@@ -34,7 +34,7 @@ export default async function Dashboard() {
   <div className=" flex items-center justify-between px-4 py-3">
     {/* Left: Logo */}
     <h3 className="font-extrabold text-xl tracking-tight">Global Tail</h3>
-
+     <Link href={'/map'}> Map link</Link>
     {/* Right: Sign out + Avatar */}
     <div className="flex items-center gap-3">
       <SignOutButton />

@@ -2,6 +2,8 @@
 import 'server-only'
 import { createSupabaseServerClient } from '@/api/server'
 import PostCard from "./PostCard"
+import Link from 'next/link'
+
 const POSTS_BUCKET = 'posts'
 const AVATARS_BUCKET = 'profile_avatars'
 
@@ -77,6 +79,7 @@ export default async function PostFeed() {
 
       <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {items.map(p => (
+  
     <PostCard
       key={p.id}
       url={p.url}
@@ -85,10 +88,9 @@ export default async function PostFeed() {
       description={p.description}
       location={p.location}
       created_at={p.created_at}
-      authorName={p.profile?.full_name}
-      avatarUrl={p.avatarUrl}
+      authorName={p.profile?.full_name} 
     />
-  ))}
+    ))}
       </ul>
     </section>
   )
