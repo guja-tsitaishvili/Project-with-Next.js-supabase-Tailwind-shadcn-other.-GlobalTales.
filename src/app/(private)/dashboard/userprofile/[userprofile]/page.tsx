@@ -1,137 +1,117 @@
-import 'server-only'
+export const dynamic = 'force-dynamic'
+import { createSupabaseServerClient } from "@/api/server"
 import Image from 'next/image'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { createSupabaseServerClient } from '@/api/server'
-
-const AVATARS_BUCKET = 'profile_avatars'
-const POSTS_BUCKET = 'posts'
-
+import PostCard from "@/components/impocomponnent/PostCard"
 type Profile = {
   id: string
   full_name: string | null
-  bio: string | null
   avatar_url: string | null
-  updated_at: string | null
+  updated_at: string
 }
-
 type Post = {
   id: string
-  image_path: string
   title: string | null
-  description: string | null
+  image_path: string | null
   location: string | null
   created_at: string
+  user_id: string
+  description: string | null
 }
 
 type PostWithUrl = Post & { imagePublicUrl: string | null }
 
+const AVATARS_BUCKET = 'profile_avatars'
+const POSTS_BUCKET = 'posts'
 
-type GetDataResult = {
-  profile: Profile | null
-  posts: PostWithUrl[]
-  avatarPublicUrl: string | null
-}
 
-async function getData(userId: string) {
-  const supabase = await createSupabaseServerClient()
+export default async function Page(
+  { params } : { params : Promise< { userprofile : string} > } 
+){
 
-  // 1) profile
-  const { data: profile, error: pErr } = await supabase
-    .from('profiles')
-    .select('id, full_name, bio, avatar_url, updated_at')
-    .eq('id', userId)
-    .single<Profile>()
+    const supabase = await createSupabaseServerClient()
 
-  if (pErr || !profile) return { profile: null, posts: [] as PostWithUrl[], avatarPublicUrl: null }
+    
+   const {userprofile} = await params
 
-  const avatarPublicUrl = profile.avatar_url
-    ? supabase.storage.from(AVATARS_BUCKET).getPublicUrl(profile.avatar_url).data.publicUrl
-    : null
 
-  // 2) posts by this user
-  const { data: posts, error: postsErr } = await supabase
-    .from('posts')
-    .select('id, image_path, title, description, location, created_at')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(100)
+    const {data: profile, error } = await supabase
+     .from('profiles')
+     .select('*')
+     .eq('id', userprofile)
+     .maybeSingle<Profile>()
+    
+    console.log(profile)
 
-  if (postsErr || !posts) return { profile, posts: [] as PostWithUrl[], avatarPublicUrl }
+    if (error) return <pre className="p-4 text-red-600">{error.message}</pre>
+    if (!profile) return <p className="p-4">Profile not found.</p>
 
-  // attach public URLs for post images
-  const postsWithUrls: PostWithUrl[] = posts.map((p): PostWithUrl => ({
-  ...p,
-  imagePublicUrl: p.image_path
-    ? supabase.storage.from(POSTS_BUCKET).getPublicUrl(p.image_path).data.publicUrl
-    : null,
-}))
+    let avatarPublicUrl: string | null = null
 
-  return { profile, posts: postsWithUrls, avatarPublicUrl }
-}
+ if (profile?.avatar_url) {
+    const { data } = supabase.storage.from('profile_avatars').getPublicUrl(profile.avatar_url)
+     avatarPublicUrl = data?.publicUrl ?? null
+  }
 
-export default async function UserProfilePage({ params }: { params: { id: string } }) {
-  const { profile, posts, avatarPublicUrl } = await getData(params.id)
-  if (!profile) notFound()
+  const {data:postsRaw} = await supabase
+  .from('posts')
+  .select('id, title, image_path, created_at, user_id, description')
+  .eq('user_id', userprofile) 
+  .order('created_at', { ascending: false })
+  .overrideTypes<Post[], { merge: false }>()
 
+
+  const posts: Post[] = postsRaw ?? []
+
+const postsWithUrl: PostWithUrl[] = posts.map((p) => {
+    if (!p.image_path) return { ...p, imagePublicUrl: null }
+    const { data } = supabase.storage
+      .from(POSTS_BUCKET)
+      .getPublicUrl(p.image_path)
+    return { ...p, imagePublicUrl: data?.publicUrl ?? null }
+  })
+  
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8 space-y-8">
-      {/* Header */}
-      <section className="flex items-center gap-4">
-        {avatarPublicUrl ? (
-          <Image
-            src={avatarPublicUrl}
-            alt="Profile avatar"
-            width={84}
-            height={84}
-            className="h-20 w-20 rounded-full object-cover ring-1 ring-black/10"
-          />
-        ) : (
-          <div className="h-20 w-20 rounded-full bg-slate-200 ring-1 ring-black/10" />
-        )}
-        <div>
-          <h1 className="text-2xl font-semibold">
-            {profile.full_name ?? 'Unnamed user'}
-          </h1>
-          {profile.bio && <p className="text-sm text-slate-600">{profile.bio}</p>}
-        </div>
-      </section>
+     <div className="p-5 space-y-4">
+      <h1 className="text-xl font-bold">{profile.full_name ?? 'Unnamed'}</h1>
+      {avatarPublicUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <Image src={avatarPublicUrl}
+        alt="avatar" 
+        width={96}
+        height={96}
+        className="h-24 w-24 rounded-full object-cover" />
+      ) : (
+        <div className="h-24 w-24 rounded-full bg-slate-200" />
+      )}
+      <p className="text-sm text-slate-600">
+        profile updated: {new Date(profile.updated_at).toLocaleString()}
+      </p>
+       <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+        {postsWithUrl.map((p) => (
+          <li key={p.id} className="rounded-lg border p-2">
+            <div className="font-medium">{p.title ?? 'Untitled'}</div>
+            <div className="text-xs text-slate-500">
+              {new Date(p.created_at).toLocaleString()}
+            </div>
 
-      {/* Posts grid */}
-      <section>
-        <h2 className="mb-3 text-lg font-medium">Posts</h2>
-        {posts.length === 0 ? (
-          <p className="text-slate-600">No posts yet.</p>
-        ) : (
-          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {posts.map((p) => (
-              <li key={p.id} className="rounded-xl border bg-white/60 p-3 shadow-sm">
-                <Link href={`/dashboard/photo/${p.id}`} className="block">
-                  {p.imagePublicUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={p.imagePublicUrl}
-                      alt={p.title ?? 'Post image'}
-                      className="aspect-square w-full rounded-lg object-cover"
-                    />
-                  ) : (
-                    <div className="aspect-square w-full rounded-lg bg-slate-200" />
-                  )}
-                  <div className="mt-2 space-y-1">
-                    <p className="font-medium truncate">{p.title ?? 'Untitled'}</p>
-                    {p.location && (
-                      <p className="text-xs text-slate-600 truncate">{p.location}</p>
-                    )}
-                    <p className="text-xs text-slate-500">
-                      {new Date(p.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </main>
-  )
+            {p.imagePublicUrl ? (
+              <PostCard
+           key={p.id}
+           id={p.id}
+           url={p.imagePublicUrl}
+           title={p.title}
+           description={p.description}
+           location={p.location ?? null}
+           created_at={p.created_at}
+           userId={p.user_id} 
+              />
+            ) : (
+              <div className="aspect-square w-full rounded bg-slate-200" />
+            )}
+          </li>
+        ))}
+      </ul>
+      </div>
+   
+)
 }

@@ -92,6 +92,7 @@ export default async function PostComponent() {
            description={post.description}
            location={post.location}
            created_at={post.created_at}
+           userId={post.user_id} 
           />))}
       </ul>
       

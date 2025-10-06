@@ -15,6 +15,7 @@ type Post = {
   description: string | null
   location: string | null
   created_at: string
+
 }
 
 type Profile = {
@@ -89,6 +90,8 @@ export default async function PostFeed() {
       location={p.location}
       created_at={p.created_at}
       authorName={p.profile?.full_name} 
+      avatarUrl={p.avatarUrl}
+      userId={p.user_id} 
     />
     ))}
       </ul>
