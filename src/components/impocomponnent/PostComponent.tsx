@@ -1,8 +1,10 @@
 // app/(private)/posts/PostComponent.tsx
+//returns only posts that are from specific user
 import 'server-only'
 import { createSupabaseServerClient } from '@/api/server'
 import { notFound } from 'next/navigation'
 import PostCard from './PostCard'
+import DeleteButton from './DeleteButton'
 // If you use a single bucket, keep it as a constant:
 const BUCKET = 'posts'
 
@@ -66,11 +68,13 @@ export default async function PostComponent() {
     return <p className="text-red-600">Failed to sign URLs: {signErr.message}</p>
   }
 
+
   // Merge signed URLs back into posts by index
   const items = posts.map((p, i) => ({
     ...p,
     url: signedList?.[i]?.signedUrl ?? '',
   }))
+
 
   return (
     <section className="space-y-4">
@@ -84,6 +88,8 @@ export default async function PostComponent() {
 
       <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((post) => (
+          <li key={post.id} className="relative">
+             <DeleteButton postId={post.id} />
          <PostCard
            key={post.id}
            id={post.id}
@@ -93,7 +99,9 @@ export default async function PostComponent() {
            location={post.location}
            created_at={post.created_at}
            userId={post.user_id} 
-          />))}
+          />
+          </li>
+          ))}
       </ul>
       
     </section>

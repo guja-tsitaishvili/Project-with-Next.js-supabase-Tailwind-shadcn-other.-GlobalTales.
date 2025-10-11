@@ -4,108 +4,18 @@ import { useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import L, { Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import {getGeoTaggedPostIdsClient} from "./filter"
-import client from "@/api/client";
+import { usePostsStore } from "@/store/usePostsStore";
 
-const POSTS_BUCKET = "posts";
-
-type PostRow = {
-  id: string;
-  image_path: string;
-  title: string | null;
-  description: string | null;
-  location: string | null;
-};
-
-type Point = {
-  id: string;
-  lat: number;
-  lng: number;
-  title: string;
-  description?: string | null;
-  imageUrl: string; // signed/public URL ready for <img>
-};
-
-function parseCoordsFromLocation(s?: string | null): { lat: number; lng: number } | null {
-  if (!s) return null;
-  const labeled = s.match(
-    /lat(?:itude)?\s*[:=]?\s*(-?\d{1,2}(?:\.\d+)?)\D+lon(?:g(?:itude)?)?\s*[:=]?\s*(-?\d{1,3}(?:\.\d+)?)/i
-  );
-   if (labeled) {
-    const lat = Number(labeled[1]);
-    const lng = Number(labeled[2]);
-    if (Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180)
-      return { lat, lng };
-  }
-  const generic = s.match(/(-?\d{1,2}(?:\.\d+)?)\s*[, ]\s*(-?\d{1,3}(?:\.\d+)?)/);
-  if (generic) {
-    const lat = Number(generic[1]);
-    const lng = Number(generic[2]);
-    if (Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180)
-      return { lat, lng };
-  }
-  return null;
-}
-
-async function fetchPointsForIds(ids: string[]): Promise<Point[]> {
-  if (ids.length === 0) return [];
-
-  // get minimal columns needed for popups
-  const { data: rows, error } = await client
-    .from("posts")
-    .select("id,image_path,title,description,location")
-    .in("id", ids);
-
-  if (error) throw new Error(error.message);
-
-  const posts = (rows ?? []) as PostRow[];
-
-  // sign all image paths (works for public/private buckets)
-  const paths = posts.map((p) => p.image_path);
-  const { data: signed, error: signErr } = await client.storage
-    .from(POSTS_BUCKET)
-    .createSignedUrls(paths, 60 * 60); // 1h
-
-  if (signErr) throw new Error(signErr.message);
-
-  const signedMap = new Map<string, string>();
-  paths.forEach((p, i) => {
-    const url = signed?.[i]?.signedUrl;
-    if (p && url) signedMap.set(p, url);
-  });
-
- return posts
-    .map((p) => {
-      const coords = parseCoordsFromLocation(p.location);
-      if (!coords) return null;
-      const imageUrl =
-        signedMap.get(p.image_path) ||
-        client.storage.from(POSTS_BUCKET).getPublicUrl(p.image_path).data.publicUrl ||
-        "";
-      return {
-        id: p.id,
-        lat: coords.lat,
-        lng: coords.lng,
-        title: p.title ?? "Untitled",
-        description: p.description,
-        imageUrl,
-      } as Point;
-    })
-    .filter(Boolean) as Point[];
-}
 
 export default function MapLeaflet() {
   const router = useRouter();
-  const mapRef = useRef<LeafletMap | null>(null);
+  const mapRef = useRef<LeafletMap | null>(null); // stores the leaflet map instance after initialization (so i dont recreate it on every render)
   const mapDivRef = useRef<HTMLDivElement | null>(null);
-  const logoIcon = L.icon({
-  iconUrl: "/VisData/camera-logo.png",          // or a Supabase public URL
-  iconSize: [45, 45],            // pixel size of the image
-  iconAnchor: [10, 10],          // point that’s placed at the lat/lng (center here)
-  popupAnchor: [0, -22]       // popup offset relative to the anchor, // styles the <img> itself
-});
+  const { points, fetchPosts } = usePostsStore(); // loads posts from supabase, it doesnt need setstate becouse it is globally runed.
+
+
   useEffect(() => {
-    if (mapRef.current || !mapDivRef.current) return;
+    if (mapRef.current || !mapDivRef.current) return; //checks if mapRef.current exists (to avoid re-initializing)
 
     const map = L.map(mapDivRef.current).setView([41.7151, 44.8271], 12); // Tbilisi
     mapRef.current = map;
@@ -123,47 +33,75 @@ export default function MapLeaflet() {
       const { lat, lng } = e.latlng;
       router.push(`/create?lat=${lat.toFixed(6)}&lng=${lng.toFixed(6)}`);
     };
-    map.on("click", onClick);
+    map.on("click", onClick); //click handle should be created once, otherwise we will have multiple of them (same as map L)
 
-    let cancelled = false;
-const markers: L.Marker[] = [];
+          fetchPosts(); //fetching happens on initialisation and every time router or fetchposts change
+  }, [router, fetchPosts]); 
+ 
+useEffect(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current;
 
-(async () => {
-      try {
-        // 1) get IDs with coord-like `location`
-        const ids = await getGeoTaggedPostIdsClient(300);
+    const logoIcon = L.icon({
+      iconUrl: "/VisData/camera-logo.png",
+      iconSize: [45, 45],
+      iconAnchor: [10, 10],
+      popupAnchor: [0, -22],
+    });
 
-        // 2) fetch full data + signed URLs + parsed coords
-        const points = await fetchPointsForIds(ids);
-        if (cancelled) return;
+    const markers: L.Marker[] =  points.map((p) => {
+      const marker = L.marker([p.lat, p.lng], { icon: logoIcon })
+        .addTo(map)
+        .bindPopup(`
+          <div style="width:240px">
+            <div style="font:600 14px/1.2 system-ui;margin-bottom:6px">${p.title}</div>
+            <img src="${p.imageUrl}" alt="${p.title}" style="width:100%;border-radius:12px;margin-top:4px"/>
+            ${p.description ? `<p style="margin-top:6px">${p.description}</p>` : ""}
+          </div>
+        `);
+      return marker;
+    });
 
-        // 3) render markers
-        for (const p of points) {
-          const m = L.marker([p.lat, p.lng], { icon: logoIcon }).addTo(map);
-          m.bindPopup(`
-            <div style="width:240px">
-              <div style="font:600 14px/1.2 system-ui;margin-bottom:6px">${p.title}</div>
-              ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.title}" style="width:100%;height:auto;border-radius:12px;display:block"/>` : ""}
-              ${p.description ? `<p style="margin-top:6px">${p.description}</p>` : ""}
-            </div>
-          `);
-          markers.push(m);
-        }
-      } catch (err) {
-        console.error("Map points load error:", err);
-      }
-    })();
     return () => {
-      cancelled = true;
-      map.off("click", onClick);
       markers.forEach((m) => m.remove());
-      map.remove();
-      mapRef.current = null;
     };
-
-
-
-  }, [router]);
+  }, [points]);
 
   return <div ref={mapDivRef} className="absolute inset-0" />;
 }
+
+ // in react router object can change between renders, for example during hot reload or navigation
+   //by puting router in the dependency list, we ensure : if router changes effect reruns, and click handler uses the latest router.
+
+
+
+
+   //  Summary of what happens in this component:
+//
+//   When MapLeaflet first mounts, useEffect() runs once:
+//     - Creates the Leaflet map inside the <div> (centered on Tbilisi).
+//     - Adds the MapTiler tile layer for map visuals.
+//     - Attaches a "click" event listener: when the user clicks on the map,
+//       it takes that latitude/longitude and navigates to
+//       `/create?lat=<lat>&lng=<lng>` (opens CreatePost page).
+//     - Calls fetchPosts() to load posts from Supabase.
+//
+//  fetchPosts() (from Zustand store) fetches posts → calls set({ points: pts })
+//     - Zustand updates its global "points" state with all fetched posts.
+//     - React automatically re-renders this component with new points.
+//
+//    Second useEffect() runs whenever "points" changes:
+//     - Removes any old markers from the map.
+//     - Loops through each point and creates a Leaflet marker
+//       with an icon, title, image, and description popup.
+//     - Adds those markers to the map.
+//
+//   Result:
+//     - The map shows all posts as clickable markers.
+//     - When you add a new post (and call fetchPosts again),
+//       "points" updates in Zustand → this component re-renders
+//       → the markers refresh automatically.
+//
+//  In short:
+// useEffect #1 = map setup + initial fetch
+// useEffect #2 = display markers whenever points update

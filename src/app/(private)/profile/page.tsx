@@ -28,7 +28,7 @@ export default async function ProfilePage() {
 
       <CreatePost />
 
-         <PostComponent />
+       <PostComponent />
     </main>
   )
 }

@@ -1,17 +1,19 @@
 // app/(private)/posts/CreatePost.tsx
 'use client'
 //AI +
+import { usePostsStore } from "@/store/usePostsStore";
 import { useState, useTransition, useEffect } from 'react'
 import { v4 as uuid } from 'uuid'
 import client from '@/api/client' // your Supabase browser client
 // optional: import { toast } from 'sonner'
-
+import { useRouter } from 'next/navigation'
 type Props = {
   onCreated?: () => void,
   initialLocation?: string   // optional callback after success
 }
 
 export default function CreatePost({ onCreated, initialLocation }: Props) {
+  const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -19,7 +21,8 @@ export default function CreatePost({ onCreated, initialLocation }: Props) {
   const [preview, setPreview] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-
+  const { fetchPosts } = usePostsStore();
+  
   useEffect(() => {
     if (initialLocation) setLocation(initialLocation)
   }, [initialLocation])
@@ -63,13 +66,20 @@ export default function CreatePost({ onCreated, initialLocation }: Props) {
         })
       if (rowErr) { setError(rowErr.message); return }
 
+
+
       // optional: toast.success('Posted!')
       // reset form
+      await fetchPosts();
+
+      router.refresh()
+
       setFile(null)
       setPreview(null)
       setTitle('')
       setDescription('')
       setLocation('')
+
       onCreated?.()
     })
   }

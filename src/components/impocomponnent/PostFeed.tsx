@@ -1,4 +1,5 @@
 // components/impocomponnent/PostFeed.tsx
+//this retruns all users posts, sorted by time.
 import 'server-only'
 import { createSupabaseServerClient } from '@/api/server'
 import PostCard from "./PostCard"

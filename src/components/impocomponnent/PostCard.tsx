@@ -20,7 +20,7 @@ const PostCard: FC<PostCardProps> = ({
   id, url, title, description, location, created_at, authorName, avatarUrl, userId
 }) => {
   return (
-    <li className="rounded-xl border bg-white/50 p-3 shadow-sm">
+    <div  className="rounded-xl border bg-white/50 p-3 shadow-sm">
       <Link href={`/dashboard/${id}`} scroll={false} prefetch={false}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -47,7 +47,7 @@ const PostCard: FC<PostCardProps> = ({
         {description && <p className="text-sm text-slate-700">{description}</p>}
         <p className="text-xs text-slate-400">{new Date(created_at).toLocaleString()}</p>
       </div>
-    </li>
+    </div >
   )
 }
 
