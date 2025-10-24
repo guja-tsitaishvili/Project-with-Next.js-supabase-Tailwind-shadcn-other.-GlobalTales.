@@ -88,12 +88,8 @@ const postsWithUrl: PostWithUrl[] = posts.map((p) => {
       </p>
        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
         {postsWithUrl.map((p) => (
-          <li key={p.id} className="rounded-lg border p-2">
-            <div className="font-medium">{p.title ?? 'Untitled'}</div>
-            <div className="text-xs text-slate-500">
-              {new Date(p.created_at).toLocaleString()}
-            </div>
-
+          <li key={p.id}>
+    
             {p.imagePublicUrl ? (
               <PostCard
            key={p.id}

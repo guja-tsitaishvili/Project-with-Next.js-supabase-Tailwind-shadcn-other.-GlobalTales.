@@ -4,6 +4,7 @@ import 'server-only'
 import { createSupabaseServerClient } from '@/api/server'
 import PostCard from "./PostCard"
 import Link from 'next/link'
+import { Fragment } from 'react'
 
 const POSTS_BUCKET = 'posts'
 const AVATARS_BUCKET = 'profile_avatars'
@@ -73,27 +74,34 @@ export default async function PostFeed() {
   })
 
   return (
-    <section className="space-y-4">
+    <section className="mx-auto w-full max-w-[560px] px-2">
       <header className="flex items-end justify-between">
         <h2 className="text-lg md:text-xl font-semibold">Latest posts</h2>
         <p className="text-xs text-slate-500">{items.length} items</p>
       </header>
 
-      <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map(p => (
+      <ul className="grid grid-cols-1 gap-3">
+        {items.map((p, i) => (
   
+     <Fragment key={p.id}>
     <PostCard
-      key={p.id}
       url={p.url}
       id={p.id}
       title={p.title}
       description={p.description}
       location={p.location}
       created_at={p.created_at}
-      authorName={p.profile?.full_name} 
+      authorName={p.profile?.full_name}
       avatarUrl={p.avatarUrl}
-      userId={p.user_id} 
+      userId={p.user_id}
     />
+    {i < items.length - 1 && (
+      <div
+        aria-hidden
+        className="h-px mx-2 my-1 bg-slate-300/20 dark:bg-white/10"
+      />
+    )}
+   </Fragment>
     ))}
       </ul>
     </section>

@@ -132,7 +132,8 @@ export default function CreatePost({ onCreated, initialLocation }: Props) {
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-md bg-black px-4 py-2 text-white disabled:opacity-60"
+        className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-60
+"
       >
         {isPending ? 'Posting…' : 'Create post'}
       </button>

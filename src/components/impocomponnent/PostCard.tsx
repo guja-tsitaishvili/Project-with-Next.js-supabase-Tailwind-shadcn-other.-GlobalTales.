@@ -20,28 +20,31 @@ const PostCard: FC<PostCardProps> = ({
   id, url, title, description, location, created_at, authorName, avatarUrl, userId
 }) => {
   return (
-    <div  className="rounded-xl border bg-white/50 p-3 shadow-sm">
+    <div  >
+      <div className="inline-flex items-center gap-2">
+        <Link href={`/dashboard/userprofile/${userId}`}>
+              {avatarUrl
+                ? <img src={avatarUrl} alt="Author" className="h-8 w-8 rounded-full object-cover ring-1 ring-black/10 border border-slate-300/20 dark:border-white/10" />
+                : <div className="h-6 w-6 rounded-full bg-slate-200 ring-1 ring-black/10" />
+              }
+            </Link>
+             {authorName && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-600">{authorName}</span>
+          </div>
+        )}
+        </div>
+
       <Link href={`/dashboard/${id}`} scroll={false} prefetch={false}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={url}
           alt={title ?? 'Post image'}
-          className="aspect-square w-full rounded-lg object-cover"
+          className="aspect-square w-full  object-cover"
         />
       </Link>
 
       <div className="mt-3 space-y-1">
-        {authorName && (
-          <div className="flex items-center gap-2">
-            <Link href={`/dashboard/userprofile/${userId}`}>
-              {avatarUrl
-                ? <img src={avatarUrl} alt="Author" className="h-6 w-6 rounded-full ring-1 ring-black/10 object-cover" />
-                : <div className="h-6 w-6 rounded-full bg-slate-200 ring-1 ring-black/10" />
-              }
-            </Link>
-            <span className="text-xs text-slate-600">{authorName}</span>
-          </div>
-        )}
         {title && <h3 className="font-medium">{title}</h3>}
         {location && <p className="text-xs text-slate-500">📍 {location}</p>}
         {description && <p className="text-sm text-slate-700">{description}</p>}

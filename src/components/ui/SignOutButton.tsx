@@ -1,5 +1,4 @@
 'use client'
-
 import { Button } from '@/components/ui/button'
 import client from '@/api/client'
 import { useRouter } from 'next/navigation'
@@ -35,7 +34,8 @@ export default function SignOutButton() {
   }
 
   return (
-    <Button onClick={handleSignOut} disabled={busy}>
+    <Button onClick={handleSignOut} variant={"default"} 
+    >
       {busy ? 'Signing out…' : 'Sign out'}
     </Button>
   )
