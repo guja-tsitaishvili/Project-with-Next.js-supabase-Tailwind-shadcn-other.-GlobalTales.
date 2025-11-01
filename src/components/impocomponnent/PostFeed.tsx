@@ -94,6 +94,7 @@ export default async function PostFeed() {
       authorName={p.profile?.full_name}
       avatarUrl={p.avatarUrl}
       userId={p.user_id}
+      showProf={true}
     />
     {i < items.length - 1 && (
       <div

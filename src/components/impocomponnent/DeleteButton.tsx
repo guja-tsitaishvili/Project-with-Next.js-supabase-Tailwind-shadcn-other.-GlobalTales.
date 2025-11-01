@@ -24,7 +24,11 @@ export default function DeleteButton({ postId }: DeleteButtonProps) {
   return (
     <button
       onClick={handleDelete}
-      className="absolute top-2 right-2 z-10 bg-black text-white rounded-full px-2 py-1 hover:bg-red-600 transition"
+      className="absolute  right-0 z-10 
+  flex items-center justify-center
+  w-6 h-6 rounded-full 
+  bg-primary text-white text-xs 
+  hover:bg-red-600 transition"
     >
       X
     </button>

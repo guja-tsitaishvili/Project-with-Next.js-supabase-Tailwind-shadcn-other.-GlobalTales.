@@ -6,6 +6,7 @@ import Link from 'next/link'
 import PostFeed from '@/components/impocomponnent/PostFeed'
 import SearchBar from './SearchBar'
 import ScrollReset from './Scrollreset'
+import LogoLink from '@/components/simplecomps/LogoLink'
 export const dynamic = 'force-dynamic'
 
 export default async function Dashboard() {
@@ -39,13 +40,7 @@ export default async function Dashboard() {
 
         {/* Left: Logo + Map + ? */}
         <div className="flex items-center gap-4">
-           <Link
-              href="/dashboard"
-              className="text-primary hover:opacity-80 md:mx-6"
-            >
-          <h2 className="font-extrabold text-xl tracking-tight whitespace-nowrap">
-            <Image alt="web logo" src={'/VisData/blueglobaltales.png'} width={50} height={50}/>
-          </h2></Link>
+          <LogoLink />
 
           <div className="flex items-center gap-3 text-sm md:text-base">
             <Link

@@ -13,15 +13,16 @@ type PostCardProps = {
   created_at: string
   authorName?: string | null
   avatarUrl?: string | null
-  userId: string                    // <-- add this
+  userId: string       
+  showProf: boolean             // <-- add this
 }
 
 const PostCard: FC<PostCardProps> = ({
-  id, url, title, description, location, created_at, authorName, avatarUrl, userId
+  id, url, title, description, location, created_at, authorName, avatarUrl, userId, showProf,
 }) => {
   return (
     <div  >
-      <div className="inline-flex items-center gap-2">
+     {showProf && (<div className="inline-flex items-center gap-2">
         <Link href={`/dashboard/userprofile/${userId}`}>
               {avatarUrl
                 ? <img src={avatarUrl} alt="Author" className="h-8 w-8 rounded-full object-cover ring-1 ring-black/10 border border-slate-300/20 dark:border-white/10" />
@@ -32,8 +33,10 @@ const PostCard: FC<PostCardProps> = ({
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-600">{authorName}</span>
           </div>
+        
         )}
         </div>
+         )}
 
       <Link href={`/dashboard/${id}`} scroll={false} prefetch={false}>
         {/* eslint-disable-next-line @next/next/no-img-element */}

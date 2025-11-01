@@ -87,9 +87,11 @@ export default async function PostComponent() {
       </header>
 
       <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        
         {items.map((post) => (
           <li key={post.id} className="relative">
-             <DeleteButton postId={post.id} />
+           <DeleteButton postId={post.id} />
+           <div >
          <PostCard
            key={post.id}
            id={post.id}
@@ -99,7 +101,9 @@ export default async function PostComponent() {
            location={post.location}
            created_at={post.created_at}
            userId={post.user_id} 
+           showProf={false}
           />
+          </div>
           </li>
           ))}
       </ul>
