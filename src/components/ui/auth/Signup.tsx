@@ -72,9 +72,8 @@ if (!data?.session) {
 
 
   return (
-    <Card>
+    <Card className='bg-white/65 backdrop-blur-md mb-9'>
       <CardHeader>
-        <CardTitle>Sign up</CardTitle>
         <CardDescription>Enter email and password to sign up</CardDescription>
       </CardHeader>
 
@@ -103,6 +102,7 @@ if (!data?.session) {
               autoComplete="new-password"
             />
           </div>
+         {(formError || formSuccess)&& (  
          <div className="min-h-6">
             {formError && (
               <p className="text-sm text-red-600" role="alert" aria-live="polite">
@@ -115,6 +115,7 @@ if (!data?.session) {
               </p>
             )}
           </div>
+         )}
           <Button type="submit" className="w-full">
             {loading ? 'Creating…' : 'Create account'}
           </Button>

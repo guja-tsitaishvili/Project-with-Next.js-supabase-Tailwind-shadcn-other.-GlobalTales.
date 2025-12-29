@@ -1,7 +1,6 @@
 // app/(private)/dashboard/page.tsx
 import { createSupabaseServerClient } from '@/api/server'
 import Image from 'next/image'
-import SignOutButton from '@/components/ui/SignOutButton'
 import Link from 'next/link'
 import PostFeed from '@/components/impocomponnent/PostFeed'
 import SearchBar from './SearchBar'
@@ -35,8 +34,8 @@ export default async function Dashboard() {
     <main className="bg-background">
       {/* Header Row */}
        <ScrollReset />
-       <header className=" top-0 z-10  supports-[backdrop-filter]:bg-background/60">
-      <div className="flex items-center justify-between px-4 py-3 flex-wrap sm:flex-nowrap gap-3">
+       <header className="sticky top-0 z-10 h-17 supports-[backdrop-filter]:bg-background">
+      <div className="flex items-center justify-between px-4  flex-wrap sm:flex-nowrap gap-3">
 
         {/* Left: Logo + Map + ? */}
         <div className="flex items-center gap-4">
@@ -47,11 +46,11 @@ export default async function Dashboard() {
               href="/map"
               className="text-primary hover:opacity-80 md:mx-6"
             >
-              <Image alt="map logo" src={'/VisData/markers-removebg-preview.png'} width={50} height={50}/>
+              <Image alt="map logo" src={'/VisData/markers-removebg-preview.png'} width={50} height={45}/>
             </Link>
 
             <Link
-              href="/dashboard/Q"
+              href="/about"
               className="text-foreground/80 hover:text-foreground"
               aria-label="Questions"
               title="Questions"
@@ -65,7 +64,6 @@ export default async function Dashboard() {
         <div className="flex items-center gap-3 flex-wrap justify-end">
           <div className="flex items-center gap-3 ml-auto">
             <SearchBar />
-            <SignOutButton />
           </div>
 
           <Link href="/profile" title="Go to profile" aria-label="Open profile">
@@ -90,13 +88,14 @@ export default async function Dashboard() {
       </div>
 
       {/* Dashboard title + email */}
-      {user?.email && (
+     
+    </header>
+      {/* Posts feed */}
+       {user?.email && (
         <p className="text-sm md:text-base opacity-80 text-center break-words text-muted-foreground">
           Signed in as {profile?.full_name}
         </p>
       )}
-    </header>
-      {/* Posts feed */}
       <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-2">
         <PostFeed />
       </div>

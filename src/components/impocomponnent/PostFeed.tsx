@@ -88,7 +88,6 @@ export default async function PostFeed() {
       url={p.url}
       id={p.id}
       title={p.title}
-      description={p.description}
       location={p.location}
       created_at={p.created_at}
       authorName={p.profile?.full_name}

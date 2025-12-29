@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import CreatePost from "@/app/(private)/profile/CreatePost"; // <- your component
+import CreatePost from "@/app/(private)/profile/createpost/page"; // <- your component
 
 export default function CreateInterceptedAsModal() {
   const router = useRouter();

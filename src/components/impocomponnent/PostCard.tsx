@@ -23,6 +23,7 @@ const PostCard: FC<PostCardProps> = ({
   return (
     <div  >
      {showProf && (<div className="inline-flex items-center gap-2">
+      
         <Link href={`/dashboard/userprofile/${userId}`}>
               {avatarUrl
                 ? <img src={avatarUrl} alt="Author" className="h-8 w-8 rounded-full object-cover ring-1 ring-black/10 border border-slate-300/20 dark:border-white/10" />
@@ -35,6 +36,7 @@ const PostCard: FC<PostCardProps> = ({
           </div>
         
         )}
+         <p className="text-xs  text-slate-400">{new Date(created_at).toLocaleString()}</p>
         </div>
          )}
 
@@ -47,11 +49,11 @@ const PostCard: FC<PostCardProps> = ({
         />
       </Link>
 
-      <div className="mt-3 space-y-1">
+      <div className="mt-2 space-y-1">
+       {location && <p className="text-xs text-slate-500">📍 {location}</p>}
         {title && <h3 className="font-medium">{title}</h3>}
-        {location && <p className="text-xs text-slate-500">📍 {location}</p>}
         {description && <p className="text-sm text-slate-700">{description}</p>}
-        <p className="text-xs text-slate-400">{new Date(created_at).toLocaleString()}</p>
+       
       </div>
     </div >
   )

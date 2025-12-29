@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState} from "react";
 import { useRouter } from "next/navigation";
 import L, { Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -12,7 +12,8 @@ export default function MapLeaflet() {
   const mapRef = useRef<LeafletMap | null>(null); // stores the leaflet map instance after initialization (so i dont recreate it on every render)
   const mapDivRef = useRef<HTMLDivElement | null>(null);
   const { points, fetchPosts } = usePostsStore(); // loads posts from supabase, it doesnt need setstate becouse it is globally runed.
-
+  const [searchValue, setSearchValue] = useState("")
+  const searchMarkerRef = useRef<L.Marker | null>(null);
 
   useEffect(() => {
     if (mapRef.current || !mapDivRef.current) return; //checks if mapRef.current exists (to avoid re-initializing)
@@ -61,15 +62,69 @@ useEffect(() => {
         `);
       return marker;
     });
+  });
+  
 
-    return () => {
-      markers.forEach((m) => m.remove());
-    };
-  }, [points]);
+  const goToCoordinates = () => {
+  if (!mapRef.current) return;
 
-  return <div ref={mapDivRef} className="absolute inset-0" />;
+  const match = searchValue
+    .trim()
+    .match(/^(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)$/);
+
+  if (!match) {
+    alert("Use format: lat, lng");
+    return;
+  }
+
+  const lat = parseFloat(match[1]);
+  const lng = parseFloat(match[3]);
+
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    alert("Invalid coordinates");
+    return;
+  }
+
+  const map = mapRef.current;
+
+  map.flyTo([lat, lng], 15, { duration: 0.8 });
+
+  if (searchMarkerRef.current) {
+    searchMarkerRef.current.remove();
+  }
+
+  searchMarkerRef.current = L.marker([lat, lng])
+    .addTo(map)
+    .bindPopup(`Lat: ${lat}<br/>Lng: ${lng}`)
+    .openPopup();
+};
+
+
+
+
+ return (
+  <>
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-white rounded-xl shadow-lg flex overflow-hidden">
+      <input
+        type="text"
+        placeholder="lat, lng (e.g. 41.7151, 44.8271)"
+        value={searchValue}
+        onChange={(e) => setSearchValue(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && goToCoordinates()}
+        className="px-4 py-2 w-72 outline-none text-sm"
+      />
+      <button
+        onClick={goToCoordinates}
+        className="px-4 bg-black text-white text-sm"
+      >
+        Go
+      </button>
+    </div>
+
+    <div ref={mapDivRef} className="absolute inset-0" />
+  </>
+);
 }
-
  // in react router object can change between renders, for example during hot reload or navigation
    //by puting router in the dependency list, we ensure : if router changes effect reruns, and click handler uses the latest router.
 

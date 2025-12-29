@@ -7,10 +7,28 @@ import Signup from './Signup'
 
 const Auth: React.FC = () => {
   return (
-    <Tabs defaultValue="login" className="w-[400px] mt-[150px]">
-        <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="login">Login</TabsTrigger>
-        <TabsTrigger value="signup">Signup</TabsTrigger>
+  <div className="flex items-center justify-center min-h-screen">
+
+     <div className="w-[340px] sm:w-[400px] rounded-[2rem]  p-6 text-center">
+     
+    <Tabs defaultValue="login" className="w-full " >
+        <TabsList className="grid grid-cols-2 w-full bg-transparent mb-6 "
+        >
+        <TabsTrigger value="login"
+         className="relative text-white text-lg font-light  after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-[1px] after:bg-white after:transition-all after:duration-300 data-[state=active]:after:w-8 transition"
+          style={{
+    background: "none",
+    boxShadow: "none",
+  }}
+         >Login
+         </TabsTrigger>
+        <TabsTrigger value="signup"
+         className="relative text-white text-lg font-light  after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-[1px] after:bg-white after:transition-all after:duration-300 data-[state=active]:after:w-8 transition"
+         style={{
+    background: "none",
+    boxShadow: "none",
+  }}
+         >Register</TabsTrigger>
       </TabsList>
 
       <TabsContent value="login">
@@ -20,6 +38,8 @@ const Auth: React.FC = () => {
         <Signup />
       </TabsContent>
     </Tabs>
+      </div>
+    </div>
   )
 }
 

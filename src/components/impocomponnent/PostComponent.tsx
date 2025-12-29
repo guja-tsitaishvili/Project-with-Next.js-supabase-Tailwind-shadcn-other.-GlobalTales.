@@ -3,8 +3,7 @@
 import 'server-only'
 import { createSupabaseServerClient } from '@/api/server'
 import { notFound } from 'next/navigation'
-import PostCard from './PostCard'
-import DeleteButton from './DeleteButton'
+import Link from 'next/link'
 // If you use a single bucket, keep it as a constant:
 const BUCKET = 'posts'
 
@@ -77,37 +76,26 @@ export default async function PostComponent() {
 
 
   return (
-    <section className="space-y-4">
-      
-      <header>
-        <h2 className="text-xl font-semibold">Your posts</h2>
-        <p className="text-sm text-slate-500">
-          {items.length} {items.length === 1 ? 'item' : 'items'}
-        </p>
-      </header>
-
-      <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        
-        {items.map((post) => (
-          <li key={post.id} className="relative">
-           <DeleteButton postId={post.id} />
-           <div >
-         <PostCard
-           key={post.id}
-           id={post.id}
-           url={post.url}
-           title={post.title}
-           description={post.description}
-           location={post.location}
-           created_at={post.created_at}
-           userId={post.user_id} 
-           showProf={false}
+    <section className="w-full">
+    <header className="px-4 py-2">
+      <p className="text-sm text-slate-500">
+        {items.length} {items.length === 1 ? 'item' : 'items'}
+      </p>
+    </header>
+    <ul className="grid grid-cols-3 gap-[1px] w-full">
+      {items.map((post) => (
+        <li key={post.id} className="w-full">
+          <Link href={`/dashboard/${post.id}`} scroll={false} prefetch={false}>
+          <img
+            src={post.url}
+            alt="Post"
+            className="w-full aspect-[4/5] object-cover block"
           />
-          </div>
-          </li>
-          ))}
-      </ul>
-      
-    </section>
+          </Link>
+        </li>
+      ))}
+    </ul>
+
+  </section>
   )
 }

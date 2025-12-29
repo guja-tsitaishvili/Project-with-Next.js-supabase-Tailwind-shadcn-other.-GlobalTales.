@@ -101,9 +101,8 @@ const Login: React.FC = () => {
   }
 
   return (
-    <Card>
+    <Card className='bg-white/65 backdrop-blur-md mb-9'>
       <CardHeader>
-        <CardTitle>Login</CardTitle>
         <CardDescription>Enter email and password to login</CardDescription>
       </CardHeader>
 
